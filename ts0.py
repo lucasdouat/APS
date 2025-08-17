@@ -7,7 +7,7 @@ Created on ...
 
 Descripción:
 ------------
-Tarea Semanal N°0
+Tarea Semanal N°0 - Primeros pasos en la simulación
 
 
 Incluye:
@@ -22,26 +22,21 @@ import matplotlib.pyplot as plt
 from scipy.signal import sawtooth
 
 
+#%%  Generación de señales
 
-#%% Separación de bloques de código para ordenar tu trabajo "#%%"
-
-#%%  Inicialización
-
-#%%  Generación de señales de prueba
-
-""" Defino una función llamada mi_funcion_sen que acepta como parametros lo requerido en la consigna"""
+#Defino una función llamada mi_funcion_sen que acepta como parametros lo requerido en la consigna
 
 def mi_funcion_sen(vmax, dc, ff, ph, nn, fs):
     tt = np.arange(nn) / fs # Generación del vector Tiempo desde 0 hasta el tiempo total de meustras
     xx = vmax*np.sin(2*np.pi*ff*tt+ph)+dc ##Generación de la señal senoidal usando los parametros y el vector tiempo.
     return tt.reshape(-1,1), xx.reshape(-1,1) #Retorno los vectores xx y tt, haciendo un ajuste en el formato "Vectores en colmunas Nx1    
 
+#Funcion Triangular para Bonus
+
 def mi_funcion_triangular(vmax, dc, ff, ph, nn, fs):
     tt = np.arange(nn) / fs
     xx = vmax * sawtooth(2 * np.pi * ff * tt + ph, width=0.5) + dc
     return tt.reshape(-1, 1), xx.reshape(-1, 1)
-
-#%%  Presentación de resultados
 
 #%% Testbench
 
