@@ -131,7 +131,7 @@ for label, dot in resultado:
 rxx = sig.correlate(x1, x1)
 
 plt.figure("Autocorrelación rxx")
-plt.plot(rxx)
+plt.plot(np.arange(-len(x1)+1, len(x1)),rxx)
 plt.title("Autocorrelación rxx")
 plt.xlabel("Índice")
 plt.ylabel("Amplitud")
@@ -142,24 +142,24 @@ plt.tight_layout()
 def correlacion(x1, señales):
     resultado = []
     for i, xi in enumerate(señales):
-        xxi = sig.correlate(x1, xi)
+        xxi = sig.correlate(x1, xi, mode='full')
         resultado.append((labels[i], xxi))
     return resultado
 
 # Calcular correlaciones cruzadas
 resultado = correlacion(x1, señales)
+lags = np.arange(-len(x1)+1, len(x1))
 
-# Graficar correlaciones cruzadas
-fig, axs = plt.subplots(6, 1, figsize=(10, 12))
-for i, (label, corr) in enumerate(resultado):
-    axs[i].plot(corr)
-    axs[i].set_title(f"Correlación cruzada entre x1 y {label}")
-    axs[i].set_xlabel("Índice")
-    axs[i].set_ylabel("Amplitud")
-    axs[i].grid(True)
-
-plt.tight_layout()
-plt.show()
+# Graficar cada correlación cruzada en una figura individual
+for label, corr in resultado:
+    plt.figure(figsize=(10, 4))
+    plt.plot(lags, corr)
+    plt.title(f"Correlación cruzada entre x1 y {label}")
+    plt.xlabel("Desplazamiento")
+    plt.ylabel("Amplitud")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 
 
