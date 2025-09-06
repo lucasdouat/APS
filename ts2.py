@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Aug 31 17:13:20 2025
+
+@author: lucas-douat
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from ts1 import x1
+
+
+#%% 1) Ecuación en diferencia que modela un sistema LTI:
+""" y[n]=3*10⁻²*x[n]+5*10⁻²x[n-1]+3*10⁻²x[n-2]+1.5y[n-1]-0.5y[n-2]"""
+
+def sistema_lti(x):
+    N = len(x)
+    y = np.zeros(N) # ¿Debería de pensar en un tiempo mayor?
+    
+    for n in range(N):
+        #Condiciones para acceder a posiciones validas de las listas.
+        x_n   = x[n] if n >= 0 else 0
+        x_n1  = x[n-1] if n-1 >= 0 else 0
+        x_n2  = x[n-2] if n-2 >= 0 else 0
+        y_n1  = y[n-1] if n-1 >= 0 else 0
+        y_n2  = y[n-2] if n-2 >= 0 else 0
+        
+        y[n] = 0.03*x_n + 0.05*x_n1 + 0.03*x_n2 + 1.5*y_n1 - 0.5*y_n2
+    
+    return y
+
+# Impulso Unitaroio
+x = np.zeros(50)
+x[0] = 1  # impulso unitario
+
+y = sistema_lti(x)
+
+# Graficar
+plt.plot(range(len(y)), y,)
+plt.title("Respuesta al impulso del sistema LTI")
+plt.xlabel("n")
+plt.ylabel("y[n]")
+plt.grid(True)
+plt.show()
+
+y = sistema_lti(x1)
+
+# Graficar
+plt.plot(range(len(y)), y)
+plt.title("Respuesta al impulso del sistema LTI con seña x1")
+plt.xlabel("n")
+plt.ylabel("y[n]")
+plt.grid(True)
+plt.show()
+
+
+
+
