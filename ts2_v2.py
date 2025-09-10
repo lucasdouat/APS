@@ -33,7 +33,7 @@ b = [0.03, 0.05, 0.03]
 a = [1, -1.5, 0.5]
 
 print("Frecuencia de muestreo:", fs, "Hz")
-print("Tiempo de simulación:", N*Ts, "segundos")
+print("Tiempo de simulación:", round(N * ts, 4), "segundos")
 
 for i, x in enumerate(señales):
     y = lfilter(b, a, x)

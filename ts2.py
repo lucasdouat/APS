@@ -16,33 +16,44 @@ from scipy.signal import lfilter, square
 # Parámetros de simulación
 fs = 100000  # frecuencia de muestreo en Hz
 ts = 1 / fs  # tiempo entre muestras
-N =  1100    # número de muestras
-tt = np.linspace(0, (N-1)*ts, N).flatten()
+N = 1100     # número de muestras
+Npad = 30000 # cantidad de muestras con padding
 
+# Nuevo vector de tiempo para graficar señales con padding
+tt_padded = np.linspace(0, (Npad - 1) * ts, Npad)
 
 # Coeficientes del sistema LTI
-# y[n] = 0.03*x[n] + 0.05*x[n-1] + 0.03*x[n-2] + 1.5*y[n-1] - 0.5*y[n-2]
 b = [0.03, 0.05, 0.03]  # coeficientes de entrada (numerador)
 a = [1, -1.5, 0.5]      # coeficientes de salida (denominador)
 
-#Aplicar lfilter a cada señal
+# Aplicar lfilter con zero-padding a cada señal
 señales = [x1, x2, x3, x4, x5, x6]
 nombres = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6']
 
+print("Frecuencia de muestreo:", fs, "Hz")
+print("Tiempo de simulación con padding:", round(Npad * ts, 4), "segundos")
+
 for i, x in enumerate(señales):
-    y = lfilter(b, a, x)
+    x_padded = np.zeros(Npad)
+    x_padded[:N] = x
+    y = lfilter(b, a, x_padded)
+    potencia = np.mean(y**2)
+
     plt.figure()
-    plt.plot(tt, y)
-    plt.title(f"Salida del sistema LTI usando lfilter para señal {nombres[i]}")
+    plt.plot(tt_padded, y)
+    plt.title(f"Salida del sistema LTI con zero-padding para señal {nombres[i]}")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("y[n]")
     plt.grid(True)
-    plt.show()
+    plt.tight_layout()
+    print(f"{nombres[i]} | Potencia con padding: {round(potencia, 4)}")
 
-# Sistema LTI  usando condiciones
+
+#%% Sistema LTI  usando condiciones
 def sistema_lti(x):
     N = len(x)
     y = np.zeros(2*N+(N-1))
+    #y = np.zeros(N)
     
     for n in range(N):
         #Condiciones para acceder a posiciones validas de las listas.
@@ -60,119 +71,84 @@ def sistema_lti(x):
 impulso = np.zeros(N)
 impulso[0] = 1  # impulso unitario
 
-h = sistema_lti(impulso)
+h1 = sistema_lti(impulso)
+tt2 = np.linspace(0, (2*N+(N-1))*ts,2*N+(N-1)).flatten()
 
 # Graficar
-plt.plot(range(len(h)),h)
+plt.figure()
+plt.plot(range(len(h1)),h1)
 plt.title("Respuesta al impulso del sistema LTI mediante condiciones")
 plt.xlabel("n")
 plt.ylabel("h[n]")
 plt.grid(True)
 plt.show()
 
-y = lfilter(b, a,h)
+h2 = lfilter(b,a,impulso)
 
 # Graficar
-plt.plot(y)
+plt.figure()
+plt.plot(range(len(h2)),h2)
 plt.title("Respuesta al impulso del sistema LTI usando lfilter")
 plt.xlabel("n")
-plt.ylabel("y[n]")
+plt.ylabel("h[n]")
 plt.grid(True)
-
-
+plt.show()
 
 #%% Convolución con señales
 señales = [x1, x2, x3, x4, x5, x6]
 labels = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6']
 
 for i, x in enumerate(señales):
-    y_conv = np.convolve(x, h, mode='same')
+    y_conv = np.convolve(x, h1, mode='same')
     plt.figure()
-    plt.plot(range(len(y_conv)), y_conv)
+    plt.plot(tt2,y_conv)
     plt.title(f"Salida por convolución con {labels[i]}")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("y[n]")
     plt.grid(True)
     plt.show()
+    
+#%% Sistema  y[n] = x[n] + 3x[n-10]
+tt = np.linspace(0, (2*N+(N-1))*ts, N).flatten()
+b1 = np.zeros(11)
+b1[0] = 1
+b1[10] = 3
+a1 = [1]
 
-
-#%% Markdown explicativo
-"""
-## 🧠 Importancia de la Cantidad de Muestras en Simulación de Sistemas LTI
-
-La cantidad de muestras `N` tiene un impacto directo en la calidad de la simulación de señales y sistemas:
-
-### 1. Mejor resolución temporal
-- Aumentar `N` permite observar la evolución de la señal durante más tiempo.
-- Es útil para sistemas con respuestas prolongadas (como los recursivos).
-
-### 2. Mejor resolución espectral
-- La resolución en frecuencia está dada por: Δf = fs / N
-- Aumentar `N` reduce Δf, permitiendo distinguir mejor componentes cercanas en frecuencia.
-
-### 3. Evitar efectos de borde
-- En convolución, si `N` es pequeño, la salida puede estar truncada.
-- Usar `mode='same'` ayuda, pero conviene tener margen suficiente.
-
-### Recomendación
-Para representar correctamente la respuesta de sistemas LTI, especialmente recursivos, se recomienda usar una cantidad de muestras suficientemente grande (por ejemplo, N = 10000 o más).
-"""
-
-#%%#%% Funciones auxiliares
-
-def pot(x):
-    return np.mean(x**2)
-
-def energia(x):
-    return np.sum(x**2)
-
-#%% 1) Sintetizar señales
-fs = 100000
-Ts = 1 / fs
-N = 1100
-tt = np.linspace(0, (N-1)*Ts, N).flatten()
-
-f1 = 2000
-x1 = np.sin(2 * np.pi * f1 * tt)
-x2 = 2 * np.sin(2 * np.pi * f1 * tt + np.pi/2)
-f_mod = 1000
-modulador = np.sin(2 * np.pi * f_mod * tt)
-x3 = x1 * modulador
-x4 = np.clip(x1, -0.75, 0.75)
-f5 = 4000
-x5 = square(2 * np.pi * f5 * tt)
-N_pulso = int(0.01/Ts)
-x6 = np.zeros(N)
-x6[:N_pulso] = 1
-
-#%% 2) Respuesta al impulso
-impulso = np.zeros(N)
-impulso[0] = 1
-h = sistema_lti(impulso)
-
+h1 = lfilter(b1, a1, impulso)
 plt.figure()
-plt.plot(h)
-plt.title("Respuesta al impulso h[n]")
+plt.plot(h1)
+plt.title("Respuesta al impulso del sistema y[n] = x[n] + 3x[n-10]")
 plt.xlabel("n")
 plt.ylabel("h[n]")
 plt.grid(True)
-plt.tight_layout()
-plt.show()
 
-#%% 3) Convolución con señales x1 a x6
-señales = [x1, x2, x3, x4, x5, x6]
-nombres = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6']
+y1 = lfilter(b1, a1, x1)
+plt.figure()
+plt.plot(tt, y1)
+plt.title("Salida del sistema con señal x1")
+plt.xlabel("Tiempo [s]")
+plt.ylabel("y[n]")
+plt.grid(True)
 
-for i, x in enumerate(señales):
-    y_conv = np.convolve(x, h, mode='same')
-    plt.figure()
-    plt.plot(range(len(y_conv)), y_conv)
-    plt.title(f"Salida por convolución: {nombres[i]}")
-    plt.xlabel("Tiempo [s]")
-    plt.ylabel("y[n]")
-    plt.grid(True)
-    plt.tight_layout()
-    #energia = energia(y_conv)
-    potencia = pot(y_conv)
-    print(f"Salida {nombres[i]}  Potencia: {potencia:.4f}")
+#%% Sistema: y[n] = x[n] + 3y[n-10]
+b2 = [1]
+a2 = np.zeros(11)
+a2[0] = 1
+a2[10] = -3
 
+h2 = lfilter(b2, a2, impulso)
+plt.figure()
+plt.plot(h2)
+plt.title("Respuesta al impulso del sistema y[n] = x[n] + 3y[n-10]")
+plt.xlabel("n")
+plt.ylabel("h[n]")
+plt.grid(True)
+
+y2 = lfilter(b2, a2, x1)
+plt.figure()
+plt.plot(tt, y2)
+plt.title("Salida del sistema con señal x1")
+plt.xlabel("Tiempo [s]")
+plt.ylabel("y[n]")
+plt.grid(True)
