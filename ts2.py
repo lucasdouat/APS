@@ -8,7 +8,6 @@ Created on Sun Aug 31 17:13:20 2025
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ts1 import x1,x2,x3,x4,x5,x6
 from scipy.signal import lfilter, square
 
 #%%#%% 1) Ecuación en diferencia que modela un sistema LTI:
@@ -16,11 +15,36 @@ from scipy.signal import lfilter, square
 # Parámetros de simulación
 fs = 100000  # frecuencia de muestreo en Hz
 ts = 1 / fs  # tiempo entre muestras
-N = 1100     # número de muestras
-Npad = 30000 # cantidad de muestras con padding
+N = 1000     # número de muestras
+tt = np.linspace(0, (N-1)*ts,N).flatten() # vector de tiempo.
 
 # Nuevo vector de tiempo para graficar señales con padding
+Npad = 2*N+(N-1) # cantidad de muestras con padding
 tt_padded = np.linspace(0, (Npad - 1) * ts, Npad)
+
+#Señal 1: Senoidal de 2kHz
+f1 = 2000
+x1 = np.sin(2*np.pi*f1*tt)
+
+#Señal 2: Amplificada y desfazada
+x2 = 2*np.sin(2*np.pi*f1*tt+np.pi/2)
+
+#señal 3: Modulada en amplitud
+f_mod = 1000
+modulador = np.sin(2*np.pi*f_mod*tt)
+x3=x1*modulador
+
+#Señal 4: Recortada al 75% de la amplitud
+x4 = np.clip(x1, -0.75,0.75)
+
+#Señal 5. Cuadrada de 4kHz
+f5 = 4000
+x5 = square(2*np.pi*f5*tt)
+
+#señal 6: Pulso rectangular de 10ms
+N_pulso = int(0.01/ts)
+x6= np.zeros(N)
+x6[:N_pulso]=1
 
 # Coeficientes del sistema LTI
 b = [0.03, 0.05, 0.03]  # coeficientes de entrada (numerador)
@@ -46,14 +70,13 @@ for i, x in enumerate(señales):
     plt.ylabel("y[n]")
     plt.grid(True)
     plt.tight_layout()
-    print(f"{nombres[i]} | Potencia con padding: {round(potencia, 4)}")
+    print(f"{nombres[i]} | Potencia: {round(potencia, 4)}")
 
 
 #%% Sistema LTI  usando condiciones
 def sistema_lti(x):
     N = len(x)
     y = np.zeros(2*N+(N-1))
-    #y = np.zeros(N)
     
     for n in range(N):
         #Condiciones para acceder a posiciones validas de las listas.
@@ -95,14 +118,14 @@ plt.grid(True)
 plt.show()
 
 #%% Convolución con señales
-señales = [x1, x2, x3, x4, x5, x6]
-labels = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6']
 
 for i, x in enumerate(señales):
-    y_conv = np.convolve(x, h1, mode='same')
+    x_padded = np.zeros(Npad)
+    x_padded[:N] = x
+    y_conv = np.convolve(x_padded, h1, mode='valid')
     plt.figure()
-    plt.plot(tt2,y_conv)
-    plt.title(f"Salida por convolución con {labels[i]}")
+    plt.plot(y_conv)
+    plt.title(f"Salida por convolución con {nombres[i]}")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("y[n]")
     plt.grid(True)
